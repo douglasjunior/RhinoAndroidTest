@@ -2,6 +2,7 @@ package io.github.douglasjunior.rhinoandroidtest;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -11,6 +12,8 @@ import org.mozilla.javascript.ScriptableObject;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private FloatingActionButton fab;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
     }
 
@@ -38,12 +41,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 "}";
 
         org.mozilla.javascript.Context cx = org.mozilla.javascript.Context.enter();
-        cx.setOptimizationLevel(-1); // disable compilation
-        Scriptable scope = cx.initStandardObjects();
-        Object wrappedOut = cx.javaToJS(this, scope);
-        ScriptableObject.putProperty(scope, "game", wrappedOut);
-        Object result = cx.evaluateString(scope, source, "<cmd>", 1, null);
-
+        try {
+            cx.setOptimizationLevel(-1); // disable compilation
+            Scriptable scope = cx.initStandardObjects();
+            Object wrappedOut = org.mozilla.javascript.Context.javaToJS(this, scope);
+            ScriptableObject.putProperty(scope, "game", wrappedOut);
+            cx.evaluateString(scope, source, "<cmd>", 1, null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Snackbar.make(fab, ex.toString(), Snackbar.LENGTH_LONG).show();
+        } finally {
+            org.mozilla.javascript.Context.exit();
+        }
     }
 
     public void walk() {
